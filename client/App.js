@@ -1,61 +1,104 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect} from 'react-redux'
 import { bindActionCreators } from 'redux';
-import { setTodo, addNewTodo } from './actions';
+import {setTodo, addTodo, updateTodo, editTodo, changeEditTodoValue} from './actions';
+import $ from 'jquery';
 
 class App extends React.Component{
-
-  constructor(props) {
+  constructor(props){
     super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.getTodo = this.getTodo.bind(this);
+    this.editItem = this.editItem.bind(this);
+    this.handleChangeEditTodo = this.handleChangeEditTodo.bind(this);
+    this.handleUpdate = this.handleUpdate.bind(this);
   }
-
-  componentWillMount() {
-    this.props.setTodo(['Hello', 'Hello 1']);
+  componentWillMount(){
+    this.getTodo();
   }
-
-  handleSubmit(event) {
+  getTodo() {
+    $.get('http://localhost:7000/todo' , (response) => {
+      this.props.setTodo(response.todo);
+    });
+  }
+  editItem (index, todo){
+    console.log('Edit');
+    this.props.editTodo({index, todo});
+  }
+  handleChangeEditTodo(event) {
+    this.props.changeEditTodoValue(event.target.value);
+  }
+  handleUpdate(event) {
     event.preventDefault();
-    this.props.addNewTodo(document.getElementById('todo-input').value);
+    $.ajax({
+      type: "PUT",
+      contentType: "application/json; charset=utf-8",
+      url: "http://localhost:7000/update-todo/" + this.props.todoApp.editTodo.todo._id,
+      data: JSON.stringify({
+        name: this.props.todoApp.editTodo.todo.name,
+      }),
+      success: (response) =>{
+        if (response.success) {
+          this.getTodo();
+        }
+      }
+    });
   }
-
-  render() {
+  handleSubmit(event){
+    event.preventDefault();
+    $.ajax({
+      type: "POST",
+      contentType: "application/json; charset=utf-8",
+      url: "http://localhost:7000/create-todo",
+      data: JSON.stringify({
+        name: document.getElementById('todo-input').value,
+      }),
+      success: (response) =>{
+        if (response.success) {
+          document.getElementById('todo-input').value = '';
+          this.getTodo();
+        }
+      }
+    });
+  }
+  render(){
     return(
       <div>
-        <nav className="navbar navbar-default">
-          <div className="container-fluid">
-            <div className="navbar-header">
-              <a className="navbar-brand" href="#">NOTE</a>
-            </div>
-            <ul className="nav navbar-nav">
-              <li className="active"><a href="#">Home</a></li>
-              <li><a href="http://localhost:8080/#/about">About</a></li>
-              <li><a href="http://localhost:8080/#/login">Login</a></li>
-              <li><a href="http://localhost:8080/#/todo">Todos</a></li>
-            </ul>
-          </div>
-        </nav>
-        <div>
+      <div className="container">
+        <div className="row">
+          <div className="col-md-8 col-md-offset-2">
           <form onSubmit={this.handleSubmit}>
-            <input id="todo-input" type="text" className="form-control"/>
+            <input type="text" id="todo-input" className="form-control"/>
           </form>
           <ul className="list-group">
-            {this.props.todoApp.todo.map((todo, index) => {
-              return <li key={index} className="list-group-item">{todo}</li>;
+            {this.props.todoApp.todo.map((todoItem, index) =>{
+              return <li key={index} className="list-group-item">
+                {(this.props.todoApp.editTodo.index !== index) ? <div>
+                  <input type="checkbox"/>
+                  <span onDoubleClick={() => this.editItem(index, todoItem)}>{todoItem.name}</span>
+                  <a className="pull-right">Remove</a>
+                </div>: <form onSubmit={this.handleUpdate}>
+                  <input
+                    onChange={this.handleChangeEditTodo}
+                    type="text"
+                    value={this.props.todoApp.editTodo.todo.name}
+                    className="form-control"
+                  />
+                </form>}
+              </li>
             })}
-          </ul>
+            </ul>
+          </div>
         </div>
+      </div>
       </div>
     );
   }
 }
-
-function mapStateToProps(state) {
-  return { todoApp: state.todo }
+function mapStateToProps (state) {
+  return { todoApp: state.todo}
 }
-
-function mapDispatchToProps(dispatch) {
-  return bindActionCreators({setTodo, addNewTodo}, dispatch);
+function mapDispatchProps (dispacth) {
+  return bindActionCreators ({setTodo, addTodo, updateTodo, editTodo, changeEditTodoValue}, dispacth);
 }
-
-export default                 (mapStateToProps, mapDispatchToProps)(App);
+export default connect (mapStateToProps, mapDispatchProps)(App);
