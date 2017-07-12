@@ -138,9 +138,9 @@ class App extends React.Component{
               </ul>
             </div>
             <div className="col-md-8 col-md-offset-2">
-              <button onClick={this.filterAll} type="button" className="btn btn-lg btn-success btn-block">All</button>
-              <button onClick={this.filterDone} type="button" className="btn btn-lg btn-success btn-block">Check Done</button>
-              <button onClick={this.filterActive} type="button" className="btn btn-lg btn-success btn-block">Active</button>
+                <button onClick={this.filterAll} type="button" className="btn btn-success btn-block">ALL</button>
+                <button onClick={this.filterDone} type="button" className="btn btn-success btn-block"> CHECK DONE</button>
+                <button onClick={this.filterActive} type="button" className="btn btn-success btn-block">NOT DONE</button>
             </div>
           </div>
         </div>
